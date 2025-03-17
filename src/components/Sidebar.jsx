@@ -42,8 +42,8 @@ export default function Sidebar({ isOpen, toggleSidebar }) {
               key={index}
               to={item.path}
               className={({ isActive }) =>
-                `flex items-center px-4 py-2 rounded-lg transition-colors ${
-                  isActive ? 'bg-indigo-600 text-white' : 'hover:bg-indigo-500'
+                `flex items-center px-4 py-2 rounded-sm  transition-colors ${
+                  isActive ? 'bg-indigo-600  text-white pl-3 ' : 'hover:bg-gray-600'
                 }`
               }
             >
