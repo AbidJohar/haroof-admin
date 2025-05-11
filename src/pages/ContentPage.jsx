@@ -1,61 +1,107 @@
-import React, { useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
-import { books } from '../assets/assets.js';
-import { FaThumbsUp, FaThumbsDown, FaUsers } from 'react-icons/fa'; // Added FaUsers
+import React, { useEffect, useState } from 'react';
+import { useParams } from 'react-router-dom';
+import axios from 'axios';
+import { FaThumbsUp, FaThumbsDown, FaUsers } from 'react-icons/fa';
+import { ScaleLoader } from 'react-spinners';
 
 const ContentPage = () => {
   const { bookId } = useParams();
-  console.log("id", bookId);
+  const [book, setBook] = useState(null);
+  const [content, setContent] = useState('');
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const base_url = import.meta.env.VITE_BASE_URL;
 
-  const navigate = useNavigate();
-  const book = books.find((b) => b.id === parseInt(bookId));
-  console.log("books:", book);
+  useEffect(() => {
+    const fetchBook = async () => {
+      try {
+        setLoading(true);
+        const response = await axios.get(`${base_url}/v1/books/admin/get-content/${bookId}`, {
+          headers: {
+            'x-admin-token': import.meta.env.VITE_ADMIN_SECRET,
+          },
+        });
 
-  const [isApproved, setIsApproved] = useState(false);
-  const [likes, setLikes] = useState(book?.ratings.rating || 0);
-  const [dislikes, setDislikes] = useState(0);
+        if (response.data.success) {
+          setBook(response.data.book);
+          setContent(response.data.content || 'No content available');
+        } else {
+          setError(response.data.message || 'Failed to load book');
+        }
+      } catch (err) {
+        console.error('Error fetching book:', err);
+        setError('Failed to load book. Please try again later.');
+      } finally {
+        setLoading(false);
+      }
+    };
 
-  if (!book) {
-    return <div className="p-6">Book not found!</div>;
+    fetchBook();
+  }, [bookId]);
+
+  // const handleApprove = async () => {
+  //   try {
+  //     const response = await axios.put(
+  //       `${base_url}/v1/books/admin/${bookId}/approve`,
+  //       {},
+  //       {
+  //         headers: {
+  //           'x-admin-token': import.meta.env.VITE_ADMIN_SECRET,
+  //         },
+  //       }
+  //     );
+
+  //     if (response.data.success) {
+  //       setBook({ ...book, status: 'approved' });
+  //       alert(`${book.title} has been approved!`);
+  //       setTimeout(() => navigate('/books'), 200);
+  //     } else {
+  //       setError(response.data.message || 'Failed to approve book');
+  //     }
+  //   } catch (err) {
+  //     console.error('Error approving book:', err);
+  //     setError('Failed to approve book. Please try again later.');
+  //   }
+  // };
+
+  if (loading) {
+    return (
+      <div className="w-full h-screen flex justify-center items-center">
+        <ScaleLoader width={20} color="#013147" height={130} />
+      </div>
+    );
   }
 
-  const handleApprove = () => {
-    setIsApproved(true);
-    alert(`${book.title} has been approved!`);
-    setTimeout(() => navigate('/books'), 200);
-  };
-
+  if (error || !book) {
+    return <div className="p-6">{error || 'Book not found!'}</div>;
+  }
 
   return (
     <div className="p-5 max-w-full text-start mx-auto">
       <div className="flex gap-4 mb-4">
         <div className="flex items-center gap-1">
-          <FaUsers className='text-2xl'  /> 
-          {book.readByUsers}
+          <FaUsers className="text-2xl" />
+          {book.readByUsers || 0}
         </div>
         <div className="flex items-center gap-2">
-          
-            <FaThumbsUp /> {likes}
-         
-           
-            <FaThumbsDown /> {dislikes}
-         
+          <FaThumbsUp /> {book.likes || 0}
+          <FaThumbsDown /> {book.dislikes || 0}
         </div>
       </div>
-      <h1 className="text-xl font-bold mb-3">{book.title}</h1>
+      <h1 className="text-xl font-bold mb-3">{book.title || 'Untitled'}</h1>
       <p className="text-lg space-y-1 mb-4 border-[2px] border-black/50 p-3 rounded-md">
-        {book.episodes[0]?.content || 'No content available'}
+        {content}
       </p>
       <button
-        onClick={handleApprove}
-        disabled={isApproved}
+        // onClick={handleApprove}
+        disabled={book.status === 'approved'}
         className={`px-3 py-1 rounded-full font-sm text-white ${
-          isApproved
+          book.status === 'approved'
             ? 'bg-gray-400 cursor-not-allowed'
             : 'bg-green-500 hover:bg-green-700 transition-colors'
         }`}
       >
-        {isApproved ? 'Approved' : 'Approve'}
+        {book.status === 'approved' ? 'Approved' : 'Approve'}
       </button>
     </div>
   );
