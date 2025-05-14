@@ -6,6 +6,7 @@ import Sales from "./pages/Sales";
 import Reports from "./pages/Reports";
 import Layout from "./components/DashboardContent";  
 import ContentPage from "./pages/ContentPage";
+import ViewAuthors from "./pages/ViewAuthors";
 
 function App() {
   return (
@@ -18,6 +19,8 @@ function App() {
           <Route path="authors" element={<Authors />} />
           <Route path="sales" element={<Sales />} />
           <Route path="reports" element={<Reports />} />
+          <Route path="/authors/:id" element={<ViewAuthors/>} />
+
         </Route>
       </Routes>
     </Router>

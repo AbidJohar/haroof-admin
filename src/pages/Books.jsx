@@ -69,6 +69,7 @@ const Books = () => {
                 </thead>
                 <tbody>
                   {bookList.map((book, index) => (
+                     
                     <tr key={book.id || `book-${index}`} className="hover:bg-gray-50">
                       <td className="py-2 px-4 border-b">{index + 1}</td>
                       <td className="py-2 px-4 border-b">
@@ -78,6 +79,8 @@ const Books = () => {
                         >
                           {book.title || 'Untitled'}
                         </Link>
+                        {console.log(book.status)
+                        }
                       </td>
                       <td className="py-2 px-4 border-b">{book.author || 'Unknown'}</td>
                       <td className="py-2 px-4 border-b">{book.category || 'N/A'}</td>

@@ -1,31 +1,58 @@
-import React from 'react';
-import { books } from '../assets/assets';
+import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import axios from 'axios';
+import { ScaleLoader } from 'react-spinners';
 
 const Authors = () => {
-  
-  // Extract unique authors and count their books
-  const authorsMap = books.reduce((acc, book) => {
-    const authorName = book.author;
-    if (!acc[authorName]) {
-      acc[authorName] = { name: authorName, bookCount: 0 };
-    }
-    acc[authorName].bookCount += 1;
-    return acc;
-  }, {});
+  const navigate = useNavigate();
+  const base_url = import.meta.env.VITE_BASE_URL;
+  const [authors, setAuthors] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
 
-  const authors = Object.values(authorsMap);
+  // Fetch authors from backend
+  useEffect(() => {
+    const fetchAuthors = async () => {
+      setLoading(true);
+      try {
+        const response = await axios.get(`${base_url}/v1/books/admin/get-all-writers`, {
+          withCredentials: true, // Send admin token
+        });
 
-  // Placeholder function to handle viewing author books
-  const handleViewBooks = (authorName) => {
-    // In a real app, this could navigate to a page showing the author's books
-    console.log(`Viewing books by ${authorName}`);
-    // You could use React Router's useNavigate here to go to `/authors/:authorName`
+        if (response.data.success) {
+          setAuthors(response.data.writers);
+          console.log('Writers:', response.data.writers);
+        } else {
+          setError(response.data.message || 'Failed to fetch authors');
+        }
+      } catch (err) {
+        setError(err.response?.data?.message || 'Failed to fetch authors');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchAuthors();
+  }, [base_url]);
+
+  // Handle viewing author details
+  const handleViewAuthor = (author) => {
+    navigate(`/authors/${encodeURIComponent(author.name)}`, { state: { author } });
   };
 
   return (
     <div className="p-6">
       <h1 className="text-2xl font-bold mb-4">Authors Management</h1>
-      {authors.length === 0 ? (
+
+        {/* Loading State */}
+      {loading && (
+        <div className="w-full h-screen flex justify-center items-center">
+          <ScaleLoader width={20} color="#013147" height={130} />
+        </div>
+      )}
+      {error && <p className="text-red-600">{error}</p>}
+
+      {!loading && !error && authors.length === 0 ? (
         <p className="text-gray-500">No authors found.</p>
       ) : (
         <div className="overflow-x-auto">
@@ -33,9 +60,9 @@ const Authors = () => {
             <thead className="bg-gray-100">
               <tr>
                 <th className="py-2 px-4 border-b text-left">Author Name</th>
-                <th className="py-2 px-4 border-b text-left">pending</th>
-                <th className="py-2 px-4 border-b text-left">Books Submitted</th>
-                <th className="py-2 px-4 border-b text-left">Books rejected</th>
+                <th className="py-2 px-4 border-b text-left">Total Books Submitted</th>
+                <th className="py-2 px-4 border-b text-left">Pending Books</th>
+                <th className="py-2 px-4 border-b text-left">Rejected Books</th>
                 <th className="py-2 px-4 border-b text-left">Action</th>
               </tr>
             </thead>
@@ -43,15 +70,15 @@ const Authors = () => {
               {authors.map((author, index) => (
                 <tr key={index} className="hover:bg-gray-50">
                   <td className="py-1 px-4 border-b">{author.name}</td>
-                  <td className="py-1 px-4 border-b">{author?.pending || 3} </td>
-                  <td className="py-1 px-4 border-b">{author.bookCount}</td>
-                  <td className="py-1 px-4 border-b">{author?.rejected || 2} </td>
+                  <td className="py-1 px-4 border-b">{author.bookCount || 0}</td>
+                  <td className="py-1 px-4 border-b">{author.pending || 0}</td>
+                  <td className="py-1 px-4 border-b">{author.rejected || 0}</td>
                   <td className="py-1 px-4 border-b">
                     <button
-                      onClick={() => handleViewBooks(author.name)}
+                      onClick={() => handleViewAuthor(author)}
                       className="bg-indigo-600 text-white px-3 py-1 rounded hover:bg-indigo-700 transition-colors"
                     >
-                      View Books
+                      View Author
                     </button>
                   </td>
                 </tr>
