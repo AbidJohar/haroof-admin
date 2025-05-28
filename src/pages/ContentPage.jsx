@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { ScaleLoader } from 'react-spinners';
+import { toast} from 'react-toastify';
 
 const ContentPage = () => {
   const { bookId } = useParams();
@@ -11,6 +12,7 @@ const ContentPage = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const base_url = import.meta.env.VITE_BASE_URL;
+
 
   useEffect(() => {
     const fetchBook = async () => {
@@ -53,7 +55,7 @@ const ContentPage = () => {
 
       if (response.data.success) {
         setBook({ ...book, status: 'approved', isPublished: true });
-        alert(`${book.title} has been approved!`);
+        toast.success(`${book.title} has been approved!`);
         setTimeout(() => navigate('/books'), 200);
       } else {
         setError(response.data.message || 'Failed to approve book');
@@ -78,7 +80,7 @@ const ContentPage = () => {
 
       if (response.data.success) {
         setBook({ ...book, status: 'rejected', isPublished: false });
-        alert(`${book.title} has been rejected.`);
+        toast.warn(`${book.title} has been rejected.`);
         setTimeout(() => navigate('/books'), 200);
       } else {
         setError(response.data.message || 'Failed to reject book');

@@ -9,6 +9,7 @@ export default function Layout() {
   const toggleSidebar = () => {
     setIsSidebarOpen((prev) => !prev);
   };
+  
 
   return (
     <div className="flex h-screen">
